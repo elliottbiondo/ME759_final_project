@@ -1,0 +1,41 @@
+-------------------
+BUILD INSTRUCTIONS:
+-------------------
+This folder contains a Makefile for building two executables: cuda_solve and
+mkl_solve. Both are created by the same Makefile by running:
+
+>> make
+
+However, in order to successfully build mkl_solve, environment variables must be
+properly set. This can be done by by running the following scripts which are
+contained in the $INTELROOT directory (which houses the MKL distribution):
+
+>> source $INTELROOT/bin/compilervars.sh intel64
+>> source $INTELROOT/mkl/bin/mklvars.sh intel64
+
+In addition, the environment varible $ICC must be set to point the icc compiler.
+
+-------------------
+USAGE INSTRUCTIONS:
+-------------------
+The cuda_solve executable has 2 modes:
+1) Supply three arguments: matrix dimension, bandwidth, number of right hand sides, e.g.:
+
+>> ./cuda_solve 100 31 10
+
+This generates random A (diagonally dominant) and b matricies and outputs the inclusive execution time.
+
+
+2) Supply five arguments: file name of of A matrix, file name of b matrix, 
+   matrix dimension, bandwidth number of right hand sides e.g.:
+
+>> ./cuda_solve test_A test_b 3 3 2
+
+The A matrix must be given in band form in a row major order. The b matrix must be given in
+column major order. Note that the files test_A and test_b are present in this
+directory. The output is the solution (x) to standard output.
+
+The all of the other executables (mkl_solve, omp_solve, serial_solve, omp_solve_slow)  have 
+one mode which is identical to the first mode of cuda_solve, e.g.:
+
+>> ./mkl_solve 100 31 10
