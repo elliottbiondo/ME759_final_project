@@ -46,7 +46,7 @@ escapeinside={\%*}{*}          % if you want to add a comment within your code
 \begin{titlepage}
 \begin{center}
 \LARGE ME759 Final Project\\
-\vspace{1.0in} 
+\vspace{1.0in}
 \Large Diagonally Dominant Banded Systems Solving with CUDA\\
 \vspace{2.0in}
 \mdseries Elliott Biondo \\
@@ -56,7 +56,7 @@ December 15, 2013
 \end{titlepage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage 
+\newpage
 \begin{abstract}
 
 Partial differential equations are often solved numerically, which may involve
@@ -77,11 +77,11 @@ matrix solver (\texttt{dgbsv}) over a range of matrix dimensions and bandwidths 
 single RHS. However, MKL outperforms the CUDA program when a large number
 of RHS are used. Visual profiling using NVVP indicates a potential for further
 parallelization of the forward and backward solving steps, which dominant the
-execution time. 
+execution time.
 
 This report also explores an OpenMP banded solver program, which also only
 stores and operates upon the matrix band. It is shown that naively using OpenMP
-threads naively for the same purpose of CUDA threads does not result in
+threads for the same purpose of CUDA threads does not result in
 speedup. The only meaningful parallelization achieved with OpenMP involved
 parallelizing the solving of multiple RHS. The resulting program is faster than
 the CUDA program for multiple RHS, but still slower than MLK.
@@ -90,7 +90,7 @@ Keywords: CUDA, linear system, band matrix, MKL, OpenMP
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage 
+\newpage
 \tableofcontents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
@@ -114,11 +114,11 @@ matrix. The solution is of Equation \ref{Axb} is $x$, an $N$ x $M$ matrix. One
 way of solving equation \ref{Axb} is by LU decomposition. $A$ is first
 decomposed into a lower triangular matrix ($L$) and an upper triangular matrix
 ($U$) such that:
- 
+
 \begin{equation}
 \label{LU}
 A = LU
-\end{equation}  
+\end{equation}
 
 The system is then solved in two consecutive steps, first a forward substitution step:
 \begin{equation}
@@ -136,7 +136,7 @@ Ux_i = y_i.
 In Equation \ref{forward}, $b_i$ is the $i^{th}$ column of $b$, which yields
 the solution to the intermediate vector $y_i$. In other words, Equations
 \ref{forward} and \ref{backward} must be solved to $i$ times to fully solve for
-$x$. 
+$x$.
 
 It is common for numerical methods to involve a constant $A$ and a
 $b$ vector that changes with time (or some other variable). One such example
@@ -146,10 +146,10 @@ time step will involve the less expensive solving of Equations \ref{forward} and
 \ref{backward}. It is also common for $A$ to be a banded matrix of bandwidth $k$. For the
 purpose of this report, $k$ is assumed to be equal to
 
-\begin{equation} 
-\label{half_k} 
-k = 2 \cdot k_{1/2} + 1, 
-\end{equation} 
+\begin{equation}
+\label{half_k}
+k = 2 \cdot k_{1/2} + 1,
+\end{equation}
 
 where $k_{1/2}$ represents the upper/lower bandwidth, which are presumed
 to be equal. Banded matricies may arise if the operator that is being
@@ -179,7 +179,7 @@ eliminates the need for any pivoting operations. The pseudocode for the LU
 decomposition step is seen in Figure \ref{LUcode}. This algorithm modifies the $A$
 matrix in place, such that the resulting $L$ and $U$ matrices are embedded
 within the original $A$. This avoids the burden of storing the zeros of the
-upper portion of $L$ and lower portion of $U$. 
+upper portion of $L$ and lower portion of $U$.
 
 \begin{figure}[H]
 \caption{Pseudocode for serial LU decomposition. Indexing is done from 0.}
@@ -201,7 +201,7 @@ upper portion of $L$ and lower portion of $U$.
 The forward solve for $y$ continues as shown in Figure \ref{forwardcode}. The
 backward solve for $x$ proceeds as shown in Figure \ref{backwardcode}. It
 should be noted that both of these algorithms operate on the A matrix which is
-actually the superposition of the L and U, as created by the code in Figure \ref{LUcode}. 
+actually the superposition of the L and U, as created by the code in Figure \ref{LUcode}.
 These algorithms solve the system in-place, meaning the the final answer for $x$ is stored in $b$.
 
 \begin{figure}[H]
@@ -265,7 +265,7 @@ a_{20} & a_{21} & a_{22} & a_{23} & a_{24}\\
 a_{31} & a_{32} & a_{33} & a_{34} & a_{35}\\
 a_{42} & a_{43} & a_{44} & a_{45} & a_{46}\\
 a_{53} & a_{54} & a_{55} & a_{56} & 0     \\
-a_{64} & a_{65} & a_{66} & 0      & 0     
+a_{64} & a_{65} & a_{66} & 0      & 0
 \end{array}
 \right)
 $$
@@ -285,10 +285,10 @@ For the LU decomposition step show in Figure \ref{LUcode}, iterative kernel
 calls were used for the outermost \texttt{for} loop. This was done in order to
 impose synchronization between iterations, which is necessary for this
 algorithm. This cannot be done using blocks because there is no notion of block
-synchronization in CUDA.  
+synchronization in CUDA.
 
 For each of these outer iterations, a $k_{1/2}$ by $k_{1/2}$ square chunk of
-the matrix is operated on as seen in Figure \ref{active}. 
+the matrix is operated on as seen in Figure \ref{active}.
 
 \begin{figure}[H]
 \caption{Progression of active chunk (red to blue).}
@@ -325,13 +325,13 @@ performed in parallel, though memory access is not coalesced. Asynchronous
 memory copying is used for each RHS. All memory copy operations between
 device and host for the entire program utilize pinned host memory.
 
-\subsection{Usage} 
-\label{usage} 
+\subsection{Usage}
+\label{usage}
 
 Full build and usage instructions are found in
 the file README\_BUILD\_AND\_USAGE. The executable created is called
 \texttt{cuda\_solve} and has two modes: one for testing and one for production
-runs. For testing, 3 arguments are supplied: 
+runs. For testing, 3 arguments are supplied:
 
 \begin{verbatim}
 >> ./cuda_solve <matrix dimension> <bandwidth> <number of RHS> \end{verbatim}
@@ -352,14 +352,14 @@ order. Timing results and the solution ($x$) are printed to \texttt{stdout}.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{CUDA Numerical Experiments} 
+\section{CUDA Numerical Experiments}
 \label{sec:numericalexperiments}
 
 \subsection{Scaling analysis and comparison with INTEL MKL}
 
 All scaling analysis was done on the Euler cluster with a Nvidia GeForce GTX 480 GPU.
 
-\subsubsection{Intel MKL solver} 
+\subsubsection{Intel MKL solver}
 
 A program was created using Intel MKL with identical functionality to the test
 mode of \texttt{cuda\_solve} as described in Section \ref{usage}. Full build
@@ -437,7 +437,7 @@ $b$).
 An attempt was also made to implement a banded system solver using OpenMP. This
 was done by first creating a serial solver using the algorithms described by
 Figures \ref{LUcode}, \ref{forwardcode}, \ref{backwardcode}, on a matrix
-stored in banded format. 
+stored in banded format.
 
 As it turns out, these algorithms do not offer much opportunity for
 parallelization using OpenMP. OpenMP threads have a considerably higher
@@ -524,6 +524,6 @@ Test PASSED
 ========= ERROR SUMMARY: 2 errors
 \end{verbatim}
 
-\end{document}          
+\end{document}
 
 
